@@ -1,0 +1,14 @@
+# Compiled stuff
+*.o
+*.com
+
+# Zipped stuff
+*.zip
+*.gz
+
+# Log Files
+*.lgf
+
+# Project Specific Files
+*.conf
+*.mdf
