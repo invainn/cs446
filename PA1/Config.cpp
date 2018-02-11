@@ -10,7 +10,7 @@
 // Nothing since readConfigFile fills the object
 Config::Config() {}
 
-// Reads entire file into a string, then splits string into tokens and parsed one by one
+// Reads entire file into a string, then splits string into tokens and parsed one by one 
 void Config::readConfigFile(std::string configPath) {
 	// File stream	
 	std::ifstream configFile;
@@ -71,6 +71,8 @@ void Config::readConfigFile(std::string configPath) {
 	}
 }
 
+// Validates the current config file to see if the parameters are valid
+// such as a cycletime should be greater than zero
 bool Config::validate() {
 	bool monitor = monitorDisplayTime > 0;
 	bool processor = this->processorCycleTime > 0;
@@ -85,6 +87,7 @@ bool Config::validate() {
 	return monitor && processor && scanner && harddrive && keyboard && memory && projector && ver;
 }
 
+// getters
 std::string Config::getFilePath() {
 	return this->filePath;
 }
@@ -124,5 +127,3 @@ std::string Config::getLogTo() {
 std::string Config::getLogFilePath() {
 	return this->logFilePath;
 }
-
-

@@ -3,6 +3,7 @@
 
 #include "MetaDataCode.h"
 
+// constructor
 MetaDataCode::MetaDataCode(char codeInput, std::string descriptorInput, int cyclesInput, std::string dataInput) {
 	this->code = codeInput;
 	this->descriptor = descriptorInput;
@@ -10,10 +11,12 @@ MetaDataCode::MetaDataCode(char codeInput, std::string descriptorInput, int cycl
 	this->data = dataInput;
 }
 
+// only setter since I calculate processing time after construction
 void MetaDataCode::setProcessingTime(int processingTimeInput) {
 	this->processingTime = processingTimeInput;
 }
 
+// getters
 char MetaDataCode::getCode() {
 	return this->code;
 }

@@ -30,11 +30,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	outputToLogFile(*cf, MetaDataVector);
-
-
 	return 0;
 }
 
+
+// Gets code and validates descriptor and calculates process time
+// Throws error if system or application order does not make sense (finishing before starting application)
 void calculateProcessingTime(Config cf, MetaDataCode& mdc, int& systemStatus, int& applicationStatus) {
 	if(mdc.getCode() == 'S') {
 		if(mdc.getDescriptor() == "begin" && systemStatus == 0) {
@@ -90,10 +91,12 @@ void calculateProcessingTime(Config cf, MetaDataCode& mdc, int& systemStatus, in
 	}
 }
 
+// Takes the MetaDataCode vector and config file and outputs to log file
 void outputToLogFile(Config cf, std::vector<MetaDataCode> mdv) {
 	std::ofstream logFile;
 
 	int loggedToOption = 0;
+	// these flags are set depending on where the config specifies where to log to
 	bool monitorFlag = false;
 	bool logFileFlag = false;
 
@@ -119,10 +122,11 @@ void outputToLogFile(Config cf, std::vector<MetaDataCode> mdv) {
 	if(logFileFlag) {
 		logFile.open(cf.getLogFilePath());
 		output(cf, mdv, logFile, loggedToOption);
+		logFile.close();
 	}
-
 }
 
+// Takes an ostream obj (cout or ofstream) and outputs the text to the log file
 void output(Config cf, std::vector<MetaDataCode> mdv, std::ostream& out, int loggedToOption) {
 	out << "Configuration File Data" << std::endl;
 	out << "Monitor = " << cf.getMDT() << " ms/cycle" << std::endl;
@@ -133,6 +137,8 @@ void output(Config cf, std::vector<MetaDataCode> mdv, std::ostream& out, int log
 	out << "Memory = " << cf.getMemCT() << " ms/cycle" << std::endl;
 	out << "Projector = " << cf.getProCT() << " ms/cycle" << std::endl;
 	
+	// loggedToOption is chosen in outputToLogFile
+	// it provides where to log
 	if(loggedToOption == 0) {
 		out << "Logged to: monitor and " << cf.getLogFilePath() << std::endl;
 	} else if(loggedToOption == 1) {
@@ -152,6 +158,8 @@ void output(Config cf, std::vector<MetaDataCode> mdv, std::ostream& out, int log
 	}
 }
 
+// Gets the filepath from the config and then reads the MetaData file into the MetaDataVector
+// by constructing an object of each MetaDataCode and inserts it into the vector
 void readMetaDataFile(std::string filePath, std::vector<MetaDataCode>& MetaDataVector) {
 	std::ifstream metaDataFile;
 	metaDataFile.open(filePath);
@@ -175,12 +183,16 @@ void readMetaDataFile(std::string filePath, std::vector<MetaDataCode>& MetaDataV
 		tokens.push_back(s);
 	}
 
+	metaDataFile.close();
+
+	// iterates over vector
 	for(auto it = tokens.begin(); it != tokens.end(); it++) {
 		if(*it == "Start") {
 			std::advance(it, 4);
 		} else if(*it == "End") {
 			break;
 		} else if(readOverFlag) {
+			// Gets thrown if another process is read after the period '.'
 			std::cerr << "Cannot find end!" << std::endl;
 			exit(1);
 		} 
@@ -193,7 +205,11 @@ void readMetaDataFile(std::string filePath, std::vector<MetaDataCode>& MetaDataV
 		descriptorInput = s.substr(0, s.find('}'));
 		s.erase(0, s.find('}')+1);
 
+		// Gets the cycle number
 		temp = s.substr(0, s.find(';'));
+
+		// this finds out if the process ends in a period
+		// which indicates it is the last process to be read.
 		if(temp.find('.') != std::string::npos) {
 			readOverFlag = true;
 			s.erase(s.find('.'), 1);
