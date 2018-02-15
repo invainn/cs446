@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "Config.h"
 #include "MetaDataCode.h"
