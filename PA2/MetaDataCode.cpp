@@ -16,6 +16,10 @@ void MetaDataCode::setProcessingTime(double processingTimeInput) {
 	this->processingTime = processingTimeInput;
 }
 
+void MetaDataCode::setStartTime(double startTimeInput) {
+	this->startTime = startTimeInput;
+}
+
 // getters
 char MetaDataCode::getCode() {
 	return this->code;
@@ -35,4 +39,8 @@ std::string MetaDataCode::getData() {
 
 double MetaDataCode::getProcessingTime() {
 	return this->processingTime;
+}
+
+double MetaDataCode::getStartTime() {
+	return this->startTime;
 }

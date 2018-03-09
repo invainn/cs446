@@ -6,6 +6,7 @@ class MetaDataCode {
 		// Main Constructor
 		MetaDataCode(char codeInput, std::string descriptorInput, int cyclesInput, std::string data);
 
+		void setStartTime(double startTimeInput);
 		void setProcessingTime(double processingTimeInput);
 
 		char getCode();
@@ -13,6 +14,7 @@ class MetaDataCode {
 		int getCycles();
 		std::string getData();
 		double getProcessingTime();
+		double getStartTime();
 	private:
 		char code;
 		std::string descriptor;
@@ -20,4 +22,5 @@ class MetaDataCode {
 		std::string data;
 
 		double processingTime;
+		double startTime;
 };

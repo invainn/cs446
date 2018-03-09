@@ -18,6 +18,7 @@ class Config {
 		int getProCT();
 		std::string getLogTo();
 		std::string getLogFilePath();
+		int getMemory();
 	private:
 		float version;
 		std::string filePath;
@@ -30,6 +31,7 @@ class Config {
 		int projectorCycleTime;
 
 		int memory;
+		std::string memoryType;
 		std::string logTo;
 		std::string logFilePath;
 		
