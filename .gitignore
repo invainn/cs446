@@ -11,5 +11,6 @@
 
 # Project Specific Files
 *.conf
+*.cfg
 *.mdf
 sim*
