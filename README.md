@@ -2,8 +2,10 @@
 
 ### Description
 ---
-This is the main project developed in CS 446 - Operating Systems.
+* This is the main project developed in CS 446 - Operating Systems.
 
 ### TO-DO
 ---
-Flesh out error handling and documentation
+* More documentation and error handling
+
+* Really really need to refactor
