@@ -10,9 +10,9 @@
 // Nothing since readConfigFile fills the object
 Config::Config() {}
 
-// Reads entire file into a string, then splits string into tokens and parsed one by one 
+// Reads entire file into a string, then splits string into tokens and parsed one by one
 void Config::readConfigFile(std::string configPath) {
-	// File stream	
+	// File stream
 	std::ifstream configFile;
 	configFile.open(configPath);
 
@@ -63,7 +63,7 @@ void Config::readConfigFile(std::string configPath) {
 			this->projectorCycleTime = std::stoi(*(it+4));
 		} else if(*it == "System") {
 			this->memory = std::stoi(*(it+3));
-			this->memoryType = std::stoi(*(it+2));
+			this->memoryType = (*(it+2));
 
 			if(this->memoryType.find("Gbytes") != std::string::npos) {
 				this->memory *= 1000000;
@@ -118,7 +118,7 @@ int Config::getPCT() {
 
 int Config::getSCT() {
 	return this->scannerCycleTime;
-} 
+}
 
 int Config::getHCT() {
 	return this->harddriveCycleTime;

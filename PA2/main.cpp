@@ -38,14 +38,14 @@ const auto START_TIME = std::chrono::system_clock::now();
 
 static int TIMER = 0;
 
-static std::vector<std::string> log;
+static std::vector<std::string> logFile;
 
 // Simulation starts here
 // Might need to refactor into separate class depending on future projects
 int main(int argc, char *argv[]) {
 	// Instantiating Config and MetaData
 	ps.state = EXIT;
-	std::string configFilePath = argv[1];	
+	std::string configFilePath = argv[1];
 	Config* cf = new Config();
 	std::vector<MetaDataCode> MetaDataVector;
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
 	cf->readConfigFile(configFilePath);
 
-	readMetaDataFile(cf->getFilePath(), MetaDataVector);	
+	readMetaDataFile(cf->getFilePath(), MetaDataVector);
 
 	for(auto& mdc : MetaDataVector) {
 		calculateProcessingTime(*cf, mdc, systemStatus, applicationStatus);
@@ -86,7 +86,7 @@ void* timer(void *emp) {
 }
 // set global, doesn't need to pass in data
 double processThread(int timeLimit) {
-	
+
 	int time = timeLimit;
 	pthread_t timerThread;
 
@@ -122,12 +122,12 @@ void calculateProcessingTime(Config cf, MetaDataCode& mdc, int& systemStatus, in
 			ps.state = START;
 			auto currentTime = std::chrono::system_clock::now();
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Simulator program starting");
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Simulator program starting");
 		} else if(mdc.getDescriptor() == "finish" && ps.state == READY) {
 			ps.state = EXIT;
 			auto currentTime = std::chrono::system_clock::now();
 			mdc.setProcessingTime(std::chrono::duration<double>(currentTime-START_TIME).count());
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Simulator program ending");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Simulator program ending");
 		} else {
 			std::cerr << "Missing begin or finish operation for OS!\n";
 			exit(1);
@@ -137,89 +137,89 @@ void calculateProcessingTime(Config cf, MetaDataCode& mdc, int& systemStatus, in
 			ps.state = READY;
 			auto currentTime = std::chrono::system_clock::now();
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "OS: starting process 1");
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "OS: starting process 1");
 		} else if(mdc.getDescriptor() == "finish" && ps.state == READY) {
 			auto currentTime = std::chrono::system_clock::now();
 			mdc.setProcessingTime(std::chrono::duration<double>(currentTime-START_TIME).count());
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "OS: removing process 1");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "OS: removing process 1");
 		} else {
 			std::cerr << "Missing begin or finish operation for OS!\n";
 		exit(1);
 		}
 	} else if(mdc.getCode() == 'P' && mdc.getDescriptor() == "run") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 		timeLimit = mdc.getCycles() * cf.getPCT();
 		runProcess(timeLimit, mdc);
-		log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start processing action");
-		log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end processing action");
-		ps.state = READY;	
+		logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start processing action");
+		logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end processing action");
+		ps.state = READY;
 	} else if(mdc.getCode() == 'I') {
 		if(mdc.getDescriptor() == "hard drive") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getHCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive input");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive input");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive input");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive input");
+		ps.state = READY;
 		} else if(mdc.getDescriptor() == "keyboard") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getKCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start keyboard input");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end keyboard input");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start keyboard input");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end keyboard input");
+		ps.state = READY;
 		} else if(mdc.getDescriptor() == "scanner") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getSCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start scanner input");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end scanner input");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start scanner input");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end scanner input");
+		ps.state = READY;
 		} else {
 			std::cerr << "Invalid descriptor!" << std::endl;
 			exit(1);
 		}
 	} else if(mdc.getCode() == 'O') {
 		if(mdc.getDescriptor() == "hard drive") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getHCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive output");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive output");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive output");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive output");
+		ps.state = READY;
 		} else if(mdc.getDescriptor() == "monitor") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getMDT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start monitor output");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end monitor output");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start monitor output");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end monitor output");
+		ps.state = READY;
 		} else if(mdc.getDescriptor() == "projector") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getProCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start projector output");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end projector output");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start projector output");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end projector output");
+		ps.state = READY;
 		} else {
 			std::cerr << "Invalid descriptor!" << std::endl;
 			exit(1);
 		}
 	} else if(mdc.getCode() == 'M') {
 		if(mdc.getDescriptor() == "block") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getMemCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start memory blocking");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end memory blocking");
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: start memory blocking");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end memory blocking");
+		ps.state = READY;
 		} else if(mdc.getDescriptor() == "allocate") {
-		ps.state = RUNNING;	
+		ps.state = RUNNING;
 			timeLimit = mdc.getCycles() * cf.getMemCT();
 			runProcess(timeLimit, mdc);
-			log.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: allocating memory");
-			log.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: memory allocated at 0x" + generateMemoryLocation());
-		ps.state = READY;	
+			logFile.push_back(std::to_string(mdc.getStartTime()) + " - " + "Process 1: allocating memory");
+			logFile.push_back(std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: memory allocated at 0x" + generateMemoryLocation());
+		ps.state = READY;
 		} else {
 			std::cerr << "Invalid descriptor!" << std::endl;
 			exit(1);
@@ -259,9 +259,9 @@ void outputToLogFile(Config cf, std::vector<MetaDataCode> mdv) {
 	}
 
 	if(monitorFlag) {
-		output(cf, mdv, std::cout, loggedToOption);	
-	} 
-	
+		output(cf, mdv, std::cout, loggedToOption);
+	}
+
 	if(logFileFlag) {
 		logFile.open(cf.getLogFilePath());
 		output(cf, mdv, logFile, loggedToOption);
@@ -279,7 +279,7 @@ void output(Config cf, std::vector<MetaDataCode> mdv, std::ostream& out, int log
 	out << "Keyboard = " << cf.getKCT() << " ms/cycle" << std::endl;
 	out << "Memory = " << cf.getMemCT() << " ms/cycle" << std::endl;
 	out << "Projector = " << cf.getProCT() << " ms/cycle" << std::endl;
-	
+
 	// loggedToOption is chosen in outputToLogFile
 	// it provides where to log
 	if(loggedToOption == 0) {
@@ -289,11 +289,11 @@ void output(Config cf, std::vector<MetaDataCode> mdv, std::ostream& out, int log
 	} else if(loggedToOption == 2) {
 		out << "Logged to: " << cf.getLogFilePath() << std::endl;
 	}*/
-	
+
 	out << std::endl;
 	out << "Meta-Data Metrics" << std::endl;
 
-	for(auto it = log.begin(); it != log.end(); it++) {
+	for(auto it = logFile.begin(); it != logFile.end(); it++) {
 		out << std::fixed << std::setprecision(6) << *it << std::endl;
 	}
 }
@@ -318,7 +318,7 @@ bool readOverFlag = false;
 			metaDataFile >> temp;
 			s.append(" ");
 			s.append(temp);
-		} 
+		}
 
 		tokens.push_back(s);
 	}
@@ -335,13 +335,13 @@ bool readOverFlag = false;
 			// Gets thrown if another process is read after the period '.'
 			std::cerr << "Cannot find end!" << std::endl;
 			exit(1);
-		} 
+		}
 
 		s = *it;
-		
+
 		codeInput = s[0];
 		s.erase(0, 2);
-		
+
 		descriptorInput = s.substr(0, s.find('}'));
 		s.erase(0, s.find('}')+1);
 
