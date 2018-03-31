@@ -19,6 +19,7 @@ struct processState {
 	int state;
 };
 
+// half of these functions need to go into a class
 void calculateProcessingTime(Config*, MetaDataCode&, int&, int&);
 void readMetaDataFile(std::string, std::vector<MetaDataCode>&);
 void outputToLogFile(Config, std::vector<MetaDataCode>);
@@ -27,16 +28,22 @@ void* timer(void*);
 double processThread(processState);
 void runProcess(int, MetaDataCode&);
 void initSem();
+
+// This needs to be in a Logger class 
 void directOutput(Config, std::string); 
 void outputToStream(std::ostream&, std::string);
+
+void processOperation(int, MetaDataCode&, sem_t&, pthread_mutex_t&);
 std::string generateMemoryLocation(int);
 
+// needs to be enums
 const int START = 0;
 const int READY = 1;
 const int RUNNING = 2;
 const int WAIT = 3;
 const int EXIT = 4;
 
+// move into Resource class
 sem_t projectorSemaphore;
 sem_t harddriveSemaphore;
 sem_t scannerSemaphore;
@@ -45,19 +52,22 @@ sem_t keyboardSemaphore;
 
 pthread_mutex_t projectorLock;
 pthread_mutex_t harddriveLock;
+pthread_mutex_t scannerLock;
+pthread_mutex_t monitorLock;
+pthread_mutex_t keyboardLock;
 
+// these need to be deleted in future projects
 static int harddriveOutCount = 0;
 static int harddriveInCount = 0;
 static int projectorCount = 0;
-
 static int memoryBlocksAllocated = 0;
 
+// this needs to be a class
 processState ps;
+
+// these can stay
 const auto START_TIME = std::chrono::system_clock::now();
-
 static int TIMER = 0;
-
-static std::vector<std::string> logFile;
 
 // Simulation starts here
 // Might need to refactor into separate class depending on future projects
@@ -203,19 +213,15 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 			// after waiting, we have access to the resources. For now, we need 1 resource
 			pthread_mutex_lock(&harddriveLock);
 			// critical section
-			harddriveInCount++;
+			auto endTime = processThread(timeLimit);
 			// unlock 
 			pthread_mutex_unlock(&harddriveLock);
 			//output end time
-			auto endTime = processThread(timeLimit);
 			mdc.setProcessingTime(endTime);
-
 			sem_post(&harddriveSemaphore);
+
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive input on HDD " + std::to_string(currentCount));
-
 			ps.state = READY; 
-
-
 		} else if(mdc.getDescriptor() == "keyboard") {
 			ps.state = RUNNING;
 			timeLimit = mdc.getCycles() + cf->getKCT();
@@ -256,36 +262,22 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 		}
 	} else if(mdc.getCode() == 'O') {
 		if(mdc.getDescriptor() == "hard drive") {
-			ps.state = RUNNING;
-			timeLimit = mdc.getCycles() + cf->getHCT();
+			// temporary until concurrency is needed
 			int currentCount;
 			if(harddriveOutCount == cf->getHarddriveResources()) {
 				harddriveOutCount = 0;
 			}
-			currentCount = harddriveOutCount;
+			currentCount = harddriveOutCount++;
+
+			timeLimit = mdc.getCycles() + cf->getHCT();
 			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive output on HDD " + std::to_string(currentCount));
-			// actually start now
-
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&harddriveSemaphore);
-
-			// after waiting, we have access to the resources. For now, we need 1 resource
-			pthread_mutex_lock(&harddriveLock);
-			// critical section
-			harddriveOutCount++;
-			// unlock 
-			pthread_mutex_unlock(&harddriveLock);
-			//output end time
-			auto endTime = processThread(timeLimit);
-			mdc.setProcessingTime(endTime);
-
-			sem_post(&harddriveSemaphore);
+			processOperation(timeLimit, mdc, harddriveSemaphore, harddriveLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive output on HDD " + std::to_string(currentCount));
-
 			ps.state = READY; 
 		} else if(mdc.getDescriptor() == "monitor") {
 			ps.state = RUNNING;
@@ -371,6 +363,22 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 		}
 	}
 }
+
+void processOperation(int timeLimit, MetaDataCode &mdc, sem_t &semaphore, pthread_mutex_t &mutex) {
+			// in this operation, we need to wait for a semaphore to be available
+			sem_wait(&semaphore);
+			// now lock critical section
+			pthread_mutex_lock(&mutex);
+			// critical section
+			// this is can be flexible as a reference to a function can be called
+			auto endTime = processThread(timeLimit);
+			// unlock 
+			pthread_mutex_unlock(&mutex);
+			//output end time
+			mdc.setProcessingTime(endTime);
+			// signal that resource is released
+			sem_post(&semaphore);
+} 
 
 // Takes an ostream obj (cout or ofstream) and outputs the text to the selected stream 
 void outputToStream(std::ostream& out, std::string logOutput) {
@@ -479,7 +487,11 @@ void readMetaDataFile(std::string filePath, std::vector<MetaDataCode>& MetaDataV
 void initSem() {
 	pthread_mutex_init(&projectorLock, NULL);
 	pthread_mutex_init(&harddriveLock, NULL);
+	pthread_mutex_init(&monitorLock, NULL);
+	pthread_mutex_init(&scannerLock, NULL);
+	pthread_mutex_init(&keyboardLock, NULL);
 
+	// needs to be changed to initialized to number of resources
 	sem_init(&harddriveSemaphore, 0, 1); 
 	sem_init(&monitorSemaphore, 0, 1); 
 	sem_init(&keyboardSemaphore, 0, 1); 
