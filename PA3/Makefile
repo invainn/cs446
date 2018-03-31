@@ -11,4 +11,4 @@ MetaDataCode.o: MetaDataCode.cpp
 Config.o: Config.cpp
 	g++ -pthread -c -std=c++11 Config.cpp
 
-clean: rm -rf sim03
+clean: rm -rf sim03 Config.o MetaDataCode.o
