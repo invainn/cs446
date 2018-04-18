@@ -62,6 +62,8 @@ static int harddriveInCount = 0;
 static int projectorCount = 0;
 static int memoryBlocksAllocated = 0;
 
+static bool didFirstLog = false;
+
 // this needs to be a class
 processState ps;
 
@@ -89,7 +91,6 @@ int main(int argc, char *argv[]) {
 	for(auto& mdc : MetaDataVector) {
 		calculateProcessingTime(&cf, mdc, systemStatus, applicationStatus);
 	}
-
 
 	return 0;
 }
@@ -174,7 +175,7 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "OS: removing process 1");
 		} else {
 			std::cerr << "Missing begin or finish operation for OS!\n";
-		exit(1);
+			exit(1);	
 		}
 	} else if(mdc.getCode() == 'P' && mdc.getDescriptor() == "run") {
 		ps.state = RUNNING;
@@ -410,7 +411,12 @@ void directOutput(Config cf, std::string logOutput) {
 	}
 
 	if(logFileFlag) {
-		logFile.open(cf.getLogFilePath());
+		logFile.open(cf.getLogFilePath(), didFirstLog ? std::ofstream::app : std::ofstream::trunc);
+
+		if(!didFirstLog) {
+			didFirstLog = true;
+		}
+
 		outputToStream(logFile, logOutput);
 		logFile.close();
 	}
