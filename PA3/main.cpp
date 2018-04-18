@@ -27,7 +27,7 @@ void output(Config, std::vector<MetaDataCode>, std::ostream& );
 void* timer(void*);
 double processThread(processState);
 void runProcess(int, MetaDataCode&);
-void initSem();
+void initSem(Config);
 
 // This needs to be in a Logger class 
 void directOutput(Config, std::string); 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 	cf.readConfigFile(configFilePath);
 
 	readMetaDataFile(cf.getFilePath(), MetaDataVector);
-	initSem();
+	initSem(cf);
 
 	for(auto& mdc : MetaDataVector) {
 		calculateProcessingTime(&cf, mdc, systemStatus, applicationStatus);
@@ -192,69 +192,41 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 		ps.state = READY; 
 	} else if(mdc.getCode() == 'I') {
 		if(mdc.getDescriptor() == "hard drive") {
-			// RUNNING OPERATIONS TEMPLATE
-			ps.state = RUNNING;
-			timeLimit = mdc.getCycles() + cf->getHCT();
 			int currentCount;
 			if(harddriveInCount == cf->getHarddriveResources()) {
 				harddriveInCount = 0;
 			}
 			currentCount = harddriveInCount;
-
-			// kdset start time for right now
+			timeLimit = mdc.getCycles() + cf->getHCT();
+			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start hard drive input on HDD " + std::to_string(currentCount));
-			// actually start now
-
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&harddriveSemaphore);
-
-			// after waiting, we have access to the resources. For now, we need 1 resource
-			pthread_mutex_lock(&harddriveLock);
-			// critical section
-			auto endTime = processThread(timeLimit);
-			// unlock 
-			pthread_mutex_unlock(&harddriveLock);
-			//output end time
-			mdc.setProcessingTime(endTime);
-			sem_post(&harddriveSemaphore);
-
+			processOperation(timeLimit, mdc, harddriveSemaphore, harddriveLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive input on HDD " + std::to_string(currentCount));
 			ps.state = READY; 
 		} else if(mdc.getDescriptor() == "keyboard") {
-			ps.state = RUNNING;
 			timeLimit = mdc.getCycles() + cf->getKCT();
 			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start keyboard output");
-			// actually start now
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&keyboardSemaphore);
-			//output end time
-			auto endTime = processThread(timeLimit);
-			mdc.setProcessingTime(endTime);
-			sem_post(&keyboardSemaphore);
+			processOperation(timeLimit, mdc, keyboardSemaphore, keyboardLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end keyboard output");
 			ps.state = READY; 
 		} else if(mdc.getDescriptor() == "scanner") {
-			ps.state = RUNNING;
 			timeLimit = mdc.getCycles() + cf->getSCT();
 			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start scanner output");
-			// actually start now
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&scannerSemaphore);
-			//output end time
-			auto endTime = processThread(timeLimit);
-			mdc.setProcessingTime(endTime);
-			sem_post(&scannerSemaphore);
+			processOperation(timeLimit, mdc, scannerSemaphore, scannerLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end scanner output");
 			ps.state = READY; 
 		} else {
@@ -281,49 +253,35 @@ void calculateProcessingTime(Config* cf, MetaDataCode& mdc, int& systemStatus, i
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end hard drive output on HDD " + std::to_string(currentCount));
 			ps.state = READY; 
 		} else if(mdc.getDescriptor() == "monitor") {
-			ps.state = RUNNING;
+			// temporary until concurrency is needed
 			timeLimit = mdc.getCycles() + cf->getMDT();
 			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start monitor output");
-			// actually start now
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&monitorSemaphore);
-			//output end time
-			auto endTime = processThread(timeLimit);
-			mdc.setProcessingTime(endTime);
-			sem_post(&monitorSemaphore);
+			processOperation(timeLimit, mdc, monitorSemaphore, monitorLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end monitor output");
-			ps.state = READY; 
+			ps.state = READY;
 		} else if(mdc.getDescriptor() == "projector") {
-			ps.state = RUNNING;
 			int currentCount;
 			if(projectorCount == cf->getProjectorResources()) {
 				projectorCount = 0;
 			}
-			currentCount = projectorCount; 
+			currentCount = projectorCount++; 
+			ps.state = RUNNING;
+			// temporary until concurrency is needed
 			timeLimit = mdc.getCycles() + cf->getProCT();
 			// set start time for right now
 			auto currentTime = std::chrono::system_clock::now();
+			ps.state = RUNNING;
 			mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
 			//now output start log
 			directOutput(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process 1: start projector output on PROJ " + std::to_string(currentCount));
-			// actually start now
-			// in this operation, we need to wait for a semaphore to be available
-			sem_wait(&projectorSemaphore);
-
-			pthread_mutex_lock(&projectorLock);
-			//critical section
-			projectorCount++;
-			pthread_mutex_unlock(&projectorLock);
-			//output end time
-			auto endTime = processThread(timeLimit);
-			mdc.setProcessingTime(endTime);
-			sem_post(&projectorSemaphore);
+			processOperation(timeLimit, mdc, projectorSemaphore, projectorLock);
 			directOutput(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process 1: end projector output on PROJ " + std::to_string(currentCount));
-			ps.state = READY; 
+			ps.state = READY;
 		} else {
 			std::cerr << "Invalid descriptor!" << std::endl;
 			exit(1);
@@ -490,7 +448,7 @@ void readMetaDataFile(std::string filePath, std::vector<MetaDataCode>& MetaDataV
 	}
 }
 
-void initSem() {
+void initSem(Config cf) {
 	pthread_mutex_init(&projectorLock, NULL);
 	pthread_mutex_init(&harddriveLock, NULL);
 	pthread_mutex_init(&monitorLock, NULL);
@@ -498,9 +456,9 @@ void initSem() {
 	pthread_mutex_init(&keyboardLock, NULL);
 
 	// needs to be changed to initialized to number of resources
-	sem_init(&harddriveSemaphore, 0, 1); 
+	sem_init(&harddriveSemaphore, 0, cf.getHarddriveResources()); 
 	sem_init(&monitorSemaphore, 0, 1); 
 	sem_init(&keyboardSemaphore, 0, 1); 
 	sem_init(&scannerSemaphore, 0, 1); 
-	sem_init(&projectorSemaphore, 0, 1); 
+	sem_init(&projectorSemaphore, 0, cf.getProjectorResources()); 
 }
