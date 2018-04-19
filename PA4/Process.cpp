@@ -1,6 +1,90 @@
+#include <vector>
+#include <string>
+#include <deque>
+
 #include "Process.h"
 #include "MetaDataCode.h"
 
 Process::Process() {
-    this->processState = 0;
+    this->processState = ProcessState::START;
+    this->numberOfIO = 0;
+    this->numberOfTasks = 0;
+}
+
+void Process::createProcesses(std::deque<Process>& processes, std::deque<MetaDataCode> systemOperations) {
+    int numberOfProcesses = 1;
+    // Loop over operations and count number of processes
+    for(auto it = systemOperations.begin(); it != systemOperations.end(); ++it) {
+        // Check if mdc is a Application Start
+        if(it->getCode() == 'A' && it->getDescriptor() == "begin") {
+            // Create new Process object to store new operations
+            Process p;
+            std::cout << p.getOperations().empty() << std::endl;
+
+            // Loop over vector to store operations into p
+            // if it hits Application End, exit lsdf
+            auto tempIterator = it;
+
+            std::cout <<tempIterator->getData() << std::endl;
+            if(tempIterator->getCode() != 'S' && tempIterator->getDescriptor() != "finish")  {
+                tempIterator = it+1;
+            }
+            std::cout <<tempIterator->getData() << std::endl;
+            while(tempIterator->getDescriptor() != "finish") {
+            std::cout << "hi " << tempIterator->getData() << std::endl;
+                if(tempIterator->getCode() == 'O' || tempIterator->getCode() == 'I') {
+                    p.incrementIOCount(); 
+                    p.incrementTaskCount();
+                } else {
+                    p.incrementTaskCount();
+                }
+
+                p.push(*tempIterator);
+                std::advance(tempIterator, 1);
+            }
+
+            for(auto mdc : p.getOperations()) {
+                std::cout << "boop " << mdc.getData() << std::endl;
+            }
+
+            processes.push_back(p);
+            std::cout << p.getOperations().empty() << std::endl;
+            std::cout <<tempIterator->getData() << std::endl;
+            numberOfProcesses++;
+        }
+    }
+}
+
+void Process::push(MetaDataCode mdc) {
+    this->operations.push_back(mdc);
+}
+
+void Process::incrementIOCount() {
+    this->numberOfIO++;
+}
+
+void Process::incrementTaskCount() {
+    this->numberOfTasks++;
+}
+
+void Process::setProcessCount(int count) {
+    this->processCount = count;
+}
+
+int Process::getProcessCount() {
+    return this->processCount;
+}
+
+MetaDataCode Process::popOperation() {
+    auto mdc = this->operations.front();
+    this->operations.pop_front();
+    return mdc;
+}
+
+std::deque<MetaDataCode> Process::getOperations() {
+    return this->operations;
+}
+
+Process::ProcessState Process::getProcessState() {
+    return this->processState;
 }

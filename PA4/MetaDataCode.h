@@ -1,4 +1,5 @@
 #include <iostream>
+#include <deque>
 
 #ifndef METADATACODE_H
 #define METADATACODE_H
@@ -10,18 +11,21 @@ class MetaDataCode {
 		void setStartTime(double startTimeInput);
 		void setProcessingTime(double processingTimeInput);
 
+		static void readMetaDataFile(std::string, std::deque<MetaDataCode>&);
+
 		char getCode();
 		std::string getDescriptor();
-		int getCycles();
 		std::string getData();
+
+		int getCycles();
 		double getProcessingTime();
 		double getStartTime();
 	private:
 		char code;
 		std::string descriptor;
-		int cycles;
 		std::string data;
 
+		int cycles;
 		double processingTime;
 		double startTime;
 };

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <vector>
+#include <deque>
 #include <sstream>
 #include <iomanip>
 
@@ -25,7 +25,7 @@ void Config::readConfigFile(std::string configPath) {
 	}
 
 	// This vector holds each individual "token"
-	std::vector<std::string> tokens;
+	std::deque<std::string> tokens;
 	std::string s;
 
 	// Read a string of text up until whitespace and pushes to vector
@@ -33,13 +33,13 @@ void Config::readConfigFile(std::string configPath) {
 		tokens.push_back(s);
 	}
 
-	// Iterates through vector checking for values
+	// Check through tokens and set config to their respective values
 	for(auto it = tokens.begin(); it != tokens.end(); it++) {
 		if(*it == "Log:") {
 			this->logTo = *(it+3);
 		} else if(*it == "File") {
 			s = *(it+2);
-			if(s.find(".mdf") != std::string::npos) {
+			if(s.find(".mdf") != std::string::npos) {//
 				this->filePath = s;
 			}
 		} else if(*it == "Version/Phase:") {
@@ -52,7 +52,11 @@ void Config::readConfigFile(std::string configPath) {
 		} else if(*it == "Monitor") {
 			this->monitorDisplayTime = std::stoi(*(it+4));
 		} else if(*it == "Processor") {
-			this->processorCycleTime = std::stoi(*(it+4));
+			if(*(it+1) == "Quantum") {
+				// do nothing for now
+			} else {
+				this->processorCycleTime = std::stoi(*(it+4));
+			}
 		} else if(*it == "Scanner") {
 			this->scannerCycleTime = std::stoi(*(it+4));
 		} else if(*it == "Hard") {
