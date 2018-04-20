@@ -14,9 +14,17 @@ int main(int argc, char* argv[]) {
     OperatingSystem os(&cf, fileName);
     auto processQueue = os.getProcesses();
 
-    Process p = processQueue.front();
+    // simulator starts once processes and data is ready
+    os.processSystemApp("Simulator program starting", &cf);//
 
-    os.process(p,&cf);
+    // should schedule processes here
+
+    // processes each process in the scheduled process queue
+    for(auto process : processQueue) {
+        os.process(process, &cf);
+    }
+
+    os.processSystemApp("Simulator program ending", &cf);//
 
     return 0;
 }

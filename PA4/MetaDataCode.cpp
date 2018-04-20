@@ -73,7 +73,7 @@ void MetaDataCode::readMetaDataFile(std::string filePath, std::deque<MetaDataCod
 
 	metaDataFile.close();
 
-	// iterates over vector
+	// iterates over deque 
 	for(auto it = tokens.begin(); it != tokens.end(); it++) {
 		if(*it == "Start") {
 			std::advance(it, 4);

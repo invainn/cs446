@@ -38,8 +38,6 @@ OperatingSystem::OperatingSystem(Config *cf, std::string configFilePath) {
     this->harddriveOutCount = 0;
     this->projectorCount = 0;
     this->memoryBlocksAllocated = 0;
-
-    OperatingSystem::lg;
 }
 
 void* OperatingSystem::timer(void *emp) {
@@ -102,22 +100,17 @@ std::string OperatingSystem::generateMemoryLocation(int memory) {
     return sstr.str();
 }
 
-void OperatingSystem::processSystemApp(std::string printout, MetaDataCode mdc, Config* cf, bool isStart) {
+void OperatingSystem::processSystemApp(std::string printout, Config* cf) {
     auto currentTime = std::chrono::system_clock::now();
 
-    if(isStart) {
-        mdc.setStartTime(std::chrono::duration<double>(currentTime-this->START_TIME).count());
-        Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + printout);
-    } else {
-        mdc.setProcessingTime(std::chrono::duration<double>(currentTime-this->START_TIME).count());
-        Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + printout);
-    }
+    auto timed = (std::chrono::duration<double>(currentTime-this->START_TIME).count());
+    Log::output(*cf, std::to_string(timed) + " - " + printout);
 }
 
 void OperatingSystem::processIOOperation(MetaDataCode mdc, Config* cf, sem_t &semaphore, 
                                          pthread_mutex_t &lock, int &count, int processNumber, 
-                                         std::string printout) {
-    int timeLimit = mdc.getCycles() + cf->getHCT();
+                                         int cycleTime, std::string printout) {
+    int timeLimit = mdc.getCycles() + cycleTime;
     // set start time for right now
     auto currentTime = std::chrono::system_clock::now();
     mdc.setStartTime(std::chrono::duration<double>(currentTime-this->START_TIME).count());
@@ -125,66 +118,83 @@ void OperatingSystem::processIOOperation(MetaDataCode mdc, Config* cf, sem_t &se
 
     if(count >= 0) {
         Log::output(*cf, std::to_string(mdc.getStartTime()) 
-                              + " - " + "Process " + std::to_string(processNumber) + ": start " + printout + std::to_string(count));
+                    + " - " + "Process " + std::to_string(processNumber) + ": start " + printout + " " + std::to_string(count));
         this->threadOperation(timeLimit, mdc, semaphore, lock);
         Log::output(*cf, std::to_string(mdc.getProcessingTime()) 
-                              + " - " + "Process " + std::to_string(processNumber) + ": end " + printout + std::to_string(count));
+                    + " - " + "Process " + std::to_string(processNumber) + ": end " + printout + " " + std::to_string(count));
 
         count++;
     } else {
-        Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process " + std::to_string(processNumber) + ": " + printout); 
+        Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process " + std::to_string(processNumber) + ": start " + printout); 
         this->threadOperation(timeLimit, mdc, semaphore, lock);
-        Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(processNumber) + ": " + printout);
+        Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(processNumber) + ": end " + printout);
     }
+}
+
+void OperatingSystem::processAction(std::string printout, Config* cf, MetaDataCode mdc, int processNumber, int cycleTime) {
+    auto timeLimit = mdc.getCycles() + cycleTime;
+    auto currentTime = std::chrono::system_clock::now();
+    mdc.setStartTime(std::chrono::duration<double>(currentTime-this->START_TIME).count());
+    Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process " + std::to_string(processNumber) + ": start " + printout);
+    mdc.setProcessingTime(this->processThread(timeLimit));
+    Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(processNumber) + ": end " + printout);
 }
 
 void OperatingSystem::process(Process &p, Config* cf) {
     auto processOperations = p.getOperations();
-    Log lg();
+    int noResources = -1;
 
+    this->processSystemApp("OS: starting process " + std::to_string(p.getProcessCount()), cf);
     for(auto mdc : processOperations) {
-        if(mdc.getCode() == 'S') {
-            if(mdc.getDescriptor() == "begin" && p.getProcessState() == Process::ProcessState::EXIT) {
-                this->processSystemApp("Simulator program Starting", mdc, cf, true);
-            } else if(mdc.getDescriptor() == "finish" && p.getProcessState() == Process::ProcessState::READY) {
-            } else {
-                std::cerr << "Missing begin or finish operation for OS!\n";
-                exit(1);
-            }
-        } else if(mdc.getCode() == 'A') {
-            if(mdc.getDescriptor() == "begin" && p.getProcessState() == Process::ProcessState::START) {
-            } else if(mdc.getDescriptor() == "finish" && p.getProcessState() == Process::ProcessState::READY) {
-            } else {
-                std::cerr << "Missing begin or finish operation for OS!\n";
-                exit(1);	
-            }
-        } else if(mdc.getCode() == 'P' && mdc.getDescriptor() == "run") {
+        if(mdc.getCode() == 'P' && mdc.getDescriptor() == "run") {
+            this->processAction("processing action", cf, mdc, p.getProcessCount(), cf->getPCT());
         } else if(mdc.getCode() == 'I') {
             if(mdc.getDescriptor() == "hard drive") {
+                this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, this->harddriveInCount, p.getProcessCount(), cf->getHCT(), "hard drive input on HDD");
             } else if(mdc.getDescriptor() == "keyboard") {
+                this->processIOOperation(mdc, cf, this->keyboardSemaphore, this->keyboardLock, noResources, p.getProcessCount(), cf->getKCT(), "keyboard input");
             } else if(mdc.getDescriptor() == "scanner") {
+                this->processIOOperation(mdc, cf, this->scannerSemaphore, this->scannerLock, noResources, p.getProcessCount(), cf->getSCT(), "scanner input");
             } else {
                 std::cerr << "Invalid descriptor!" << std::endl;
                 exit(1);
             }
         } else if(mdc.getCode() == 'O') {
             if(mdc.getDescriptor() == "hard drive") {
-                this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, harddriveOutCount, 42, "hard drive output on HDD");
+                // template of process stuff
+                // everything works so don't worry about it
+                // you need to fix Logging so it will log app to file as well
+                // resource count needs functions to see whether it is passed the actual resource count
+                // which then needs to reset
+                // make reset function to reset memory after each process finished
+                this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, this->harddriveOutCount, p.getProcessCount(), cf->getHCT(), "hard drive output on HDD");
             } else if(mdc.getDescriptor() == "monitor") {
+                this->processIOOperation(mdc, cf, this->monitorSemaphore, this->monitorLock, noResources, p.getProcessCount(), cf->getMDT(), "monitor output");
             } else if(mdc.getDescriptor() == "projector") {
+                this->processIOOperation(mdc, cf, this->projectorSemaphore, this->projectorLock, this->projectorCount, p.getProcessCount(), cf->getProCT(),  "projector output on PROJ");
             } else {
                 std::cerr << "Invalid descriptor!" << std::endl;
                 exit(1);
             }
         } else if(mdc.getCode() == 'M') {
             if(mdc.getDescriptor() == "block") {
+                this->processAction("memory blocking", cf, mdc, p.getProcessCount(), cf->getMemCT());
             } else if(mdc.getDescriptor() == "allocate") {
+                auto timeLimit = mdc.getCycles() + cf->getMemCT();
+                auto currentTime = std::chrono::system_clock::now();
+                auto memory = this->memoryBlocksAllocated * cf->getMemory();
+                mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
+                Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process " + std::to_string(p.getProcessCount()) + ": " + "allocating memory");
+                mdc.setProcessingTime(this->processThread(timeLimit));
+                Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(p.getProcessCount()) + ": " + "memory allocated at 0x" + this->generateMemoryLocation(memory));
+                this->memoryBlocksAllocated++;
             } else {
                 std::cerr << "Invalid descriptor!" << std::endl;
                 exit(1);
             }
         }
     }
+    this->processSystemApp("OS: removing process " + std::to_string(p.getProcessCount()), cf);
 }
 
 std::deque<Process> OperatingSystem::getProcesses() {

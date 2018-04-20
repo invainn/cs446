@@ -19,37 +19,27 @@ void Process::createProcesses(std::deque<Process>& processes, std::deque<MetaDat
         if(it->getCode() == 'A' && it->getDescriptor() == "begin") {
             // Create new Process object to store new operations
             Process p;
-            std::cout << p.getOperations().empty() << std::endl;
+            p.setProcessCount(numberOfProcesses);
 
             // Loop over vector to store operations into p
             // if it hits Application End, exit lsdf
             auto tempIterator = it;
 
-            std::cout <<tempIterator->getData() << std::endl;
             if(tempIterator->getCode() != 'S' && tempIterator->getDescriptor() != "finish")  {
                 tempIterator = it+1;
             }
-            std::cout <<tempIterator->getData() << std::endl;
             while(tempIterator->getDescriptor() != "finish") {
-            std::cout << "hi " << tempIterator->getData() << std::endl;
                 if(tempIterator->getCode() == 'O' || tempIterator->getCode() == 'I') {
                     p.incrementIOCount(); 
-                    p.incrementTaskCount();
-                } else {
-                    p.incrementTaskCount();
                 }
+
+                p.incrementTaskCount();
 
                 p.push(*tempIterator);
                 std::advance(tempIterator, 1);
             }
 
-            for(auto mdc : p.getOperations()) {
-                std::cout << "boop " << mdc.getData() << std::endl;
-            }
-
             processes.push_back(p);
-            std::cout << p.getOperations().empty() << std::endl;
-            std::cout <<tempIterator->getData() << std::endl;
             numberOfProcesses++;
         }
     }

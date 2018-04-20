@@ -17,6 +17,7 @@ class OperatingSystem {
         OperatingSystem(Config*, std::string);
 
         void process(Process&, Config*);
+        void processSystemApp(std::string, Config*);
 
         std::deque<Process> getProcesses();
     private:
@@ -24,8 +25,8 @@ class OperatingSystem {
         double processThread(int);
         void runProcess(int, MetaDataCode&);
         void threadOperation(int, MetaDataCode&, sem_t&, pthread_mutex_t&);
-        void processSystemApp(std::string, MetaDataCode, Config*, bool);
-        void processIOOperation(MetaDataCode, Config*, sem_t&, pthread_mutex_t&, int&, int, std::string);
+        void processIOOperation(MetaDataCode, Config*, sem_t&, pthread_mutex_t&, int&, int, int, std::string);
+        void processAction(std::string, Config*, MetaDataCode, int, int);
 
         std::string generateMemoryLocation(int);
 
@@ -49,7 +50,5 @@ class OperatingSystem {
         int memoryBlocksAllocated;
 
         std::deque<Process> processes;
-
-        static Log lg();
 };
 #endif
