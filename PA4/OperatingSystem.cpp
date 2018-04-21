@@ -185,7 +185,7 @@ void OperatingSystem::process(Process &p, Config* cf) {
 
                 // if the memory blocks allocated are greater than the max memory blocks
                 // then reset memory, if not, then do nothing 
-                this->memoryBlocksAllocated = (this->memoryBlocksAllocated == ((float) cf->getMaxMemorySize()/(float) cf->getMemoryBlockSize())) ? 0 : this->memoryBlocksAllocated;
+                this->memoryBlocksAllocated = (this->memoryBlocksAllocated > ((float) cf->getMaxMemorySize()/(float) cf->getMemoryBlockSize())) ? 0 : this->memoryBlocksAllocated;
 
                 auto memory = this->memoryBlocksAllocated * cf->getMemoryBlockSize();
                 mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
