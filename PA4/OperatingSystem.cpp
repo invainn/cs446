@@ -147,35 +147,52 @@ void OperatingSystem::process(Process &p, Config* cf) {
     int noResources = -1;
 
     this->processSystemApp("OS: starting process " + std::to_string(p.getProcessCount()), cf);
+    p.setProcessState(Process::ProcessState::READY);
     for(auto mdc : processOperations) {
         if(mdc.getCode() == 'P' && mdc.getDescriptor() == "run") {
             this->processAction("processing action", cf, mdc, p.getProcessCount(), cf->getPCT());
         } else if(mdc.getCode() == 'I') {
             if(mdc.getDescriptor() == "hard drive") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, this->harddriveInCount, p.getProcessCount(), cf->getHCT(), "hard drive input on HDD");
+                p.setProcessState(Process::ProcessState::READY);
+
             } else if(mdc.getDescriptor() == "keyboard") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->keyboardSemaphore, this->keyboardLock, noResources, p.getProcessCount(), cf->getKCT(), "keyboard input");
+                p.setProcessState(Process::ProcessState::READY);
             } else if(mdc.getDescriptor() == "scanner") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->scannerSemaphore, this->scannerLock, noResources, p.getProcessCount(), cf->getSCT(), "scanner input");
+                p.setProcessState(Process::ProcessState::READY);
             } else {
                 std::cerr << "Invalid descriptor!" << std::endl;
                 exit(1);
             }
         } else if(mdc.getCode() == 'O') {
             if(mdc.getDescriptor() == "hard drive") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, this->harddriveOutCount, p.getProcessCount(), cf->getHCT(), "hard drive output on HDD");
+                p.setProcessState(Process::ProcessState::READY);
             } else if(mdc.getDescriptor() == "monitor") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->monitorSemaphore, this->monitorLock, noResources, p.getProcessCount(), cf->getMDT(), "monitor output");
+                p.setProcessState(Process::ProcessState::READY);
             } else if(mdc.getDescriptor() == "projector") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processIOOperation(mdc, cf, this->projectorSemaphore, this->projectorLock, this->projectorCount, p.getProcessCount(), cf->getProCT(),  "projector output on PROJ");
+                p.setProcessState(Process::ProcessState::READY);
             } else {
                 std::cerr << "Invalid descriptor!" << std::endl;
                 exit(1);
             }
         } else if(mdc.getCode() == 'M') {
             if(mdc.getDescriptor() == "block") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 this->processAction("memory blocking", cf, mdc, p.getProcessCount(), cf->getMemCT());
+                p.setProcessState(Process::ProcessState::READY);
             } else if(mdc.getDescriptor() == "allocate") {
+                p.setProcessState(Process::ProcessState::RUNNING);
                 auto timeLimit = mdc.getCycles() + cf->getMemCT();
                 auto currentTime = std::chrono::system_clock::now();
 
@@ -189,6 +206,7 @@ void OperatingSystem::process(Process &p, Config* cf) {
                 mdc.setProcessingTime(this->processThread(timeLimit));
                 Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(p.getProcessCount()) + ": " + "memory allocated at 0x" + this->generateMemoryLocation(memory));
                 this->memoryBlocksAllocated++;
+                p.setProcessState(Process::ProcessState::READY);
             } else {
                 std::cerr << "Invalid descriptor " << mdc.getDescriptor() << std::endl;
                 exit(1);
@@ -196,6 +214,7 @@ void OperatingSystem::process(Process &p, Config* cf) {
         }
     }
     this->processSystemApp("OS: removing process " + std::to_string(p.getProcessCount()), cf);
+    p.setProcessState(Process::ProcessState::EXIT);
 }
 
 std::deque<Process> OperatingSystem::getProcesses() {

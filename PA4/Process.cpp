@@ -80,6 +80,10 @@ Process::ProcessState Process::getProcessState() {
     return this->processState;
 }
 
+void Process::setProcessState(Process::ProcessState stateChange) {
+    this->processState = stateChange; 
+}
+
 int Process::getIOCount() {
     return this->numberOfIO;
 }
