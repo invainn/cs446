@@ -87,6 +87,9 @@ void Config::readConfigFile(std::string configPath) {
 				std::cerr << "Invalid memory type!";
 				exit(1);
 			}
+		} else if(*it == "CPU") {
+			this->schedulingAlgorithm = (*(it+3));
+			std::cout << *(it+3) << std::endl;
 		}
 	}
 	configFile.close();

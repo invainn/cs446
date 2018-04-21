@@ -42,6 +42,7 @@ class Config {
 		std::string memoryType;
 		std::string logTo;
 		std::string logFilePath;
+		std::string schedulingAlgorithm;
 		
 };
 #endif
