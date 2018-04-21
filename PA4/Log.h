@@ -8,11 +8,10 @@
 #define LOG_H
 class Log {
     private:
-        Log();
-
+        static bool didFirstLog;
+        static bool checkFirstLog();
 
     public:
-        bool didFirstLog;
         static void outputToStream(std::ostream&, std::string);
 
         static void output(Config, std::string);       

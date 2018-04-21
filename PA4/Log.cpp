@@ -5,9 +5,7 @@
 #include "Log.h"
 #include "Config.h"
 
-Log::Log() {
-    this->didFirstLog = false;
-}
+bool Log::didFirstLog = false;
 
 void Log::output(Config cf, std::string logOutput) {
 	std::ofstream logFile;
@@ -33,7 +31,7 @@ void Log::output(Config cf, std::string logOutput) {
 	}
 
 	if(logFileFlag) {
-		logFile.open(cf.getLogFilePath(),std::ofstream::app);
+		logFile.open(cf.getLogFilePath(), (checkFirstLog()) ? std::ofstream::app : std::ofstream::trunc);
 
 		Log::outputToStream(logFile, logOutput);
 		logFile.close();
@@ -42,4 +40,13 @@ void Log::output(Config cf, std::string logOutput) {
 
 void Log::outputToStream(std::ostream& out, std::string logOutput) {
     out << logOutput << std::endl;
+}
+
+bool Log::checkFirstLog() {
+	if(didFirstLog == false) {
+		didFirstLog = true;
+		return false;
+	} else {
+		return didFirstLog;
+	}
 }
