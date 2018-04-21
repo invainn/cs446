@@ -20,6 +20,7 @@ class Config {
 		int getProCT();
 		std::string getLogTo();
 		std::string getLogFilePath();
+		std::string getSchedulingAlgorithm();
 		int getMemory();
 		int getProjectorResources();
 		int getHarddriveResources();

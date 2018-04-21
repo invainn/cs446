@@ -161,6 +161,10 @@ std::string Config::getLogFilePath() {
 	return this->logFilePath;
 }
 
+std::string Config::getSchedulingAlgorithm() {
+	return this->schedulingAlgorithm;
+}
+
 int Config::getHarddriveResources() {
 	return this->harddriveResources;
 }

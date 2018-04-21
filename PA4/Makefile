@@ -2,8 +2,8 @@ CC=g++
 
 all:sim04
 
-sim04: main.cpp MetaDataCode.o Config.o Process.o Log.o OperatingSystem.o
-	g++ -pthread -std=c++11 main.cpp MetaDataCode.o Config.o Process.o Log.o OperatingSystem.o -o sim04
+sim04: main.cpp MetaDataCode.o Config.o Process.o Log.o OperatingSystem.o Scheduler.o
+	g++ -pthread -std=c++11 main.cpp MetaDataCode.o Config.o Process.o Log.o OperatingSystem.o Scheduler.o -o sim04
 
 MetaDataCode.o: MetaDataCode.cpp
 	g++ -pthread -c -std=c++11 MetaDataCode.cpp
@@ -20,4 +20,7 @@ Log.o: Log.cpp
 OperatingSystem.o: OperatingSystem.cpp
 	g++ -pthread -c -std=c++11 OperatingSystem.cpp
 
-clean: rm -rf sim04 Config.o MetaDataCode.o Process.o
+Scheduler.o: Scheduler.cpp
+	g++ -pthread -c -std=c++11 Scheduler.cpp
+
+clean: rm -rf sim04 Config.o MetaDataCode.o Process.o Log.o OperatingSystem.o Scheduler.o
