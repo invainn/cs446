@@ -8,8 +8,10 @@
 #include "Scheduler.h"
 
 void Scheduler::scheduleProcesses(Config* cf, std::deque<Process> &processes) {
-    // schedule processes based on choice
+    // if no scheduler present, then quit
+    if(cf->getSchedulingAlgorithm() == "") return;
 
+    // schedule processes based on choice
     if(cf->getSchedulingAlgorithm() == "FIFO") {
         // do nothing since already sorted as is
     } else if(cf->getSchedulingAlgorithm() == "PS") {

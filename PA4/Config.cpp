@@ -10,6 +10,7 @@
 Config::Config() {
 	this->harddriveResources = 1;
 	this->projectorResources = 1;
+	this->schedulingAlgorithm = "";
 }
 
 // Reads entire file into a string, then splits string into tokens and parsed one by one
