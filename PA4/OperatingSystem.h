@@ -18,6 +18,7 @@ class OperatingSystem {
 
         void process(Process&, Config*);
         void processSystemApp(std::string, Config*);
+        void resetMemory();
 
         std::deque<Process> getProcesses();
     private:

@@ -185,7 +185,7 @@ void OperatingSystem::process(Process &p, Config* cf) {
 
                 // if the memory blocks allocated are greater than the max memory blocks
                 // then reset memory, if not, then do nothing 
-                this->memoryBlocksAllocated = (this->memoryBlocksAllocated == (cf->getMaxMemorySize()/cf->getMemoryBlockSize())) ? 0 : this->memoryBlocksAllocated;
+                this->memoryBlocksAllocated = (this->memoryBlocksAllocated == ((float) cf->getMaxMemorySize()/(float) cf->getMemoryBlockSize())) ? 0 : this->memoryBlocksAllocated;
 
                 auto memory = this->memoryBlocksAllocated * cf->getMemoryBlockSize();
                 mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
@@ -194,7 +194,7 @@ void OperatingSystem::process(Process &p, Config* cf) {
                 Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(p.getProcessCount()) + ": " + "memory allocated at 0x" + this->generateMemoryLocation(memory));
                 this->memoryBlocksAllocated++;
             } else {
-                std::cerr << "Invalid descriptor!" << std::endl;
+                std::cerr << "Invalid descriptor " << mdc.getDescriptor() << std::endl;
                 exit(1);
             }
         }
@@ -204,4 +204,8 @@ void OperatingSystem::process(Process &p, Config* cf) {
 
 std::deque<Process> OperatingSystem::getProcesses() {
     return this->processes;
+}
+
+void OperatingSystem::resetMemory() {
+    this->memoryBlocksAllocated = 0;
 }

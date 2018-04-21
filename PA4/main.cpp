@@ -22,6 +22,7 @@ int main(int argc, char* argv[]) {
     // processes each process in the scheduled process queue
     for(auto process : processQueue) {
         os.process(process, &cf);
+        os.resetMemory();
     }
 
     os.processSystemApp("Simulator program ending", &cf);//
