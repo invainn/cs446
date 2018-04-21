@@ -17,9 +17,9 @@ void Log::output(Config cf, std::string logOutput) {
 	if(cf.getLogTo() == "Both") {
 		monitorFlag = true;
 		logFileFlag = true;
-	} else if(cf.getLogTo() == "monitor") {
+	} else if(cf.getLogTo() == "Monitor") {
 		monitorFlag = true;
-	} else if(cf.getLogTo() == "file") {
+	} else if(cf.getLogTo() == "File") {
 		logFileFlag = true;
 	} else {
 		std::cerr << "Cannot log to " << cf.getLogTo() << "!\n";

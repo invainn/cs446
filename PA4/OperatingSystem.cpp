@@ -131,6 +131,7 @@ void OperatingSystem::processIOOperation(MetaDataCode mdc, Config* cf, sem_t &se
     }
 }
 
+// Processes an action (such as P or M)
 void OperatingSystem::processAction(std::string printout, Config* cf, MetaDataCode mdc, int processNumber, int cycleTime) {
     auto timeLimit = mdc.getCycles() + cycleTime;
     auto currentTime = std::chrono::system_clock::now();
@@ -140,6 +141,7 @@ void OperatingSystem::processAction(std::string printout, Config* cf, MetaDataCo
     Log::output(*cf, std::to_string(mdc.getProcessingTime()) + " - " + "Process " + std::to_string(processNumber) + ": end " + printout);
 }
 
+// Processes each process in the processing queue 
 void OperatingSystem::process(Process &p, Config* cf) {
     auto processOperations = p.getOperations();
     int noResources = -1;
@@ -161,12 +163,6 @@ void OperatingSystem::process(Process &p, Config* cf) {
             }
         } else if(mdc.getCode() == 'O') {
             if(mdc.getDescriptor() == "hard drive") {
-                // template of process stuff
-                // everything works so don't worry about it
-                // you need to fix Logging so it will log app to file as well
-                // resource count needs functions to see whether it is passed the actual resource count
-                // which then needs to reset
-                // make reset function to reset memory after each process finished
                 this->processIOOperation(mdc, cf, this->harddriveSemaphore, this->harddriveLock, this->harddriveOutCount, p.getProcessCount(), cf->getHCT(), "hard drive output on HDD");
             } else if(mdc.getDescriptor() == "monitor") {
                 this->processIOOperation(mdc, cf, this->monitorSemaphore, this->monitorLock, noResources, p.getProcessCount(), cf->getMDT(), "monitor output");

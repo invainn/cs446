@@ -11,6 +11,7 @@ Process::Process() {
     this->numberOfTasks = 0;
 }
 
+// Factory where Processes are created and then inserted into the referenced deque
 void Process::createProcesses(std::deque<Process>& processes, std::deque<MetaDataCode> systemOperations) {
     int numberOfProcesses = 1;
     // Loop over operations and count number of processes
