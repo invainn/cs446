@@ -8,7 +8,6 @@ class Config {
 		Config();
 		void readConfigFile(std::string configPath);
 		void readMetaDataFile();
-		bool validate();
 		float getVersion();
 		std::string getFilePath();
 		int getMDT();
@@ -42,10 +41,14 @@ class Config {
 
 		int memoryBlockSize;
 		int maxMemorySize;
-		std::string memoryType;
+		std::string maxMemoryType;
+		std::string memoryBlockType;
 		std::string logTo;
 		std::string logFilePath;
 		std::string schedulingAlgorithm;
+
+		bool validate();
+		void convertMemoryType(int&, std::string);
 		
 };
 #endif
