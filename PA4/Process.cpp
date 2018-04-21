@@ -78,3 +78,11 @@ std::deque<MetaDataCode> Process::getOperations() {
 Process::ProcessState Process::getProcessState() {
     return this->processState;
 }
+
+int Process::getIOCount() {
+    return this->numberOfIO;
+}
+
+int Process::getTaskCount() {
+    return this->numberOfTasks;
+}

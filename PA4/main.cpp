@@ -6,6 +6,7 @@
 #include "Log.h"
 #include "OperatingSystem.h"
 #include "Process.h"
+#include "Scheduler.h"
 
 int main(int argc, char* argv[]) {
     std::string fileName(argv[1]);
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]) {
     // simulator starts once processes and data is ready
     os.processSystemApp("Simulator program starting", &cf);//
 
-    // should schedule processes here
+    Scheduler::scheduleProcesses(&cf, processQueue); 
 
     // processes each process in the scheduled process queue
     for(auto process : processQueue) {

@@ -18,8 +18,13 @@ class Process {
 
 		static void createProcesses(std::deque<Process>&, std::deque<MetaDataCode>);
         void push(MetaDataCode);
+
         void incrementIOCount();
+        int getIOCount();
+
+
         void incrementTaskCount();
+        int getTaskCount();
 
         void setProcessCount(int);
         int getProcessCount();
