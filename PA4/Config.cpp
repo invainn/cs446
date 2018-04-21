@@ -68,7 +68,15 @@ void Config::readConfigFile(std::string configPath) {
 		} else if(*it == "Keyboard") {
 			this->keyboardCycleTime = std::stoi(*(it+4));
 		} else if(*it == "Memory") {
-			this->memoryCycleTime = std::stoi(*(it+4));
+
+			if(*(it+1) == "cycle") {
+				this->memoryCycleTime = std::stoi(*(it+4));
+			} else if(*(it+1) == "block") {
+				this->memoryBlockSize = std::stoi(*(it+4));
+				this->memoryBlockType = *(it+3);
+
+				this->convertMemoryType(this->memoryBlockSize, this->memoryBlockType);
+			}
 		} else if(*it == "Projector") {
 			if(*(it+1) == "quantity:") {
 				this->projectorResources = std::stoi(*(it+2));
@@ -76,26 +84,29 @@ void Config::readConfigFile(std::string configPath) {
 				this->projectorCycleTime = std::stoi(*(it+4));
 			}
 		} else if(*it == "System") {
-			this->memoryBlockSize = std::stoi(*(it+3));
-			this->memoryType = (*(it+2));
+			this->maxMemorySize = std::stoi(*(it+3));
+			this->maxMemoryType = *(it+2);
 
-			if(this->memoryType.find("Gbytes") != std::string::npos) {
-				this->memoryBlockSize *= 1000000;
-			} else if(this->memoryType.find("Mbytes") != std::string::npos) {
-				this->memoryBlockSize *= 1000;
-			} else if(this->memoryType.find("kbytes") == std::string::npos) {
-				std::cerr << "Invalid memory type!";
-				exit(1);
-			}
+			this->convertMemoryType(this->maxMemorySize, this->maxMemoryType);
 		} else if(*it == "CPU") {
 			this->schedulingAlgorithm = (*(it+3));
-			std::cout << *(it+3) << std::endl;
-		}
+		} 
 	}
 	configFile.close();
 
 	if(!this->validate()) {
 		std::cerr << "Missing Data!\n" << std::endl;
+		exit(1);
+	}
+}
+
+void Config::convertMemoryType(int &size, std::string type) {
+	if(type.find("Gbytes") != std::string::npos) {
+		size *= 1000000;
+	} else if(type.find("Mbytes") != std::string::npos) {
+		size *= 1000;
+	} else if(type.find("kbytes") == std::string::npos) {
+		std::cerr << "Invalid memory type!";
 		exit(1);
 	}
 }
