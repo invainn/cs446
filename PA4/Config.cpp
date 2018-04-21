@@ -76,13 +76,13 @@ void Config::readConfigFile(std::string configPath) {
 				this->projectorCycleTime = std::stoi(*(it+4));
 			}
 		} else if(*it == "System") {
-			this->memory = std::stoi(*(it+3));
+			this->memoryBlockSize = std::stoi(*(it+3));
 			this->memoryType = (*(it+2));
 
 			if(this->memoryType.find("Gbytes") != std::string::npos) {
-				this->memory *= 1000000;
+				this->memoryBlockSize *= 1000000;
 			} else if(this->memoryType.find("Mbytes") != std::string::npos) {
-				this->memory *= 1000;
+				this->memoryBlockSize *= 1000;
 			} else if(this->memoryType.find("kbytes") == std::string::npos) {
 				std::cerr << "Invalid memory type!";
 				exit(1);
@@ -121,8 +121,12 @@ std::string Config::getFilePath() {
 	return this->filePath;
 }
 
-int Config::getMemory() {
-	return this->memory;
+int Config::getMemoryBlockSize() {
+	return this->memoryBlockSize;
+}
+
+int Config::getMaxMemorySize() {
+	return this->maxMemorySize;
 }
 
 int Config::getMDT() {

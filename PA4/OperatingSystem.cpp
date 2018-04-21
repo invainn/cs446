@@ -182,7 +182,12 @@ void OperatingSystem::process(Process &p, Config* cf) {
             } else if(mdc.getDescriptor() == "allocate") {
                 auto timeLimit = mdc.getCycles() + cf->getMemCT();
                 auto currentTime = std::chrono::system_clock::now();
-                auto memory = this->memoryBlocksAllocated * cf->getMemory();
+
+                // if the memory blocks allocated are greater than the max memory blocks
+                // then reset memory, if not, then do nothing 
+                this->memoryBlocksAllocated = (this->memoryBlocksAllocated == (cf->getMaxMemorySize()/cf->getMemoryBlockSize())) ? 0 : this->memoryBlocksAllocated;
+
+                auto memory = this->memoryBlocksAllocated * cf->getMemoryBlockSize();
                 mdc.setStartTime(std::chrono::duration<double>(currentTime-START_TIME).count());
                 Log::output(*cf, std::to_string(mdc.getStartTime()) + " - " + "Process " + std::to_string(p.getProcessCount()) + ": " + "allocating memory");
                 mdc.setProcessingTime(this->processThread(timeLimit));

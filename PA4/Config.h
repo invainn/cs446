@@ -21,7 +21,8 @@ class Config {
 		std::string getLogTo();
 		std::string getLogFilePath();
 		std::string getSchedulingAlgorithm();
-		int getMemory();
+		int getMemoryBlockSize();
+		int getMaxMemorySize();
 		int getProjectorResources();
 		int getHarddriveResources();
 
@@ -39,7 +40,8 @@ class Config {
 		int projectorResources;
 		int harddriveResources;
 
-		int memory;
+		int memoryBlockSize;
+		int maxMemorySize;
 		std::string memoryType;
 		std::string logTo;
 		std::string logFilePath;
