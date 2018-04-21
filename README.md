@@ -6,6 +6,5 @@
 
 ### TO-DO
 ---
-* More documentation and error handling
+* More Error Handling
 
-* Really really need to refactor
