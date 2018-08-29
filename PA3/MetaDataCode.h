@@ -4,6 +4,7 @@
 class MetaDataCode {
 	public:
 		// Main Constructor
+		// Real constructor header
 		MetaDataCode(char codeInput, std::string descriptorInput, int cyclesInput, std::string data);
 
 		void setStartTime(double startTimeInput);
