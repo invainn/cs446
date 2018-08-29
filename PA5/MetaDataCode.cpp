@@ -7,6 +7,7 @@
 #include "MetaDataCode.h"
 
 // constructor
+// some constructor
 MetaDataCode::MetaDataCode(char codeInput, std::string descriptorInput, int cyclesInput, std::string dataInput) {
 	this->code = codeInput;
 	this->descriptor = descriptorInput;
